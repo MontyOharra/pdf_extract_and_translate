@@ -16,7 +16,7 @@ class TestLangDetectDetector:
 
     def test_detect_english(self):
         """Test detection of English text."""
-        from src.translators.langdetect_detector import LangDetectDetector
+        from src.translators.language_detector import LangDetectDetector
 
         detector = LangDetectDetector()
         result = detector.detect("Good morning, how are you doing today? I hope you are having a wonderful day.")
@@ -25,7 +25,7 @@ class TestLangDetectDetector:
 
     def test_detect_spanish(self):
         """Test detection of Spanish text."""
-        from src.translators.langdetect_detector import LangDetectDetector
+        from src.translators.language_detector import LangDetectDetector
 
         detector = LangDetectDetector()
         result = detector.detect("Hola, ¿cómo estás?")
@@ -34,7 +34,7 @@ class TestLangDetectDetector:
 
     def test_detect_french(self):
         """Test detection of French text."""
-        from src.translators.langdetect_detector import LangDetectDetector
+        from src.translators.language_detector import LangDetectDetector
 
         detector = LangDetectDetector()
         result = detector.detect("Bonjour, comment allez-vous?")
@@ -43,7 +43,7 @@ class TestLangDetectDetector:
 
     def test_detect_german(self):
         """Test detection of German text."""
-        from src.translators.langdetect_detector import LangDetectDetector
+        from src.translators.language_detector import LangDetectDetector
 
         detector = LangDetectDetector()
         result = detector.detect("Guten Tag, wie geht es Ihnen?")
@@ -52,7 +52,7 @@ class TestLangDetectDetector:
 
     def test_detect_empty_string_raises_error(self):
         """Test that empty string raises ValueError."""
-        from src.translators.langdetect_detector import LangDetectDetector
+        from src.translators.language_detector import LangDetectDetector
 
         detector = LangDetectDetector()
 
@@ -61,7 +61,7 @@ class TestLangDetectDetector:
 
     def test_detect_none_raises_error(self):
         """Test that None raises ValueError."""
-        from src.translators.langdetect_detector import LangDetectDetector
+        from src.translators.language_detector import LangDetectDetector
 
         detector = LangDetectDetector()
 
@@ -70,7 +70,7 @@ class TestLangDetectDetector:
 
     def test_detect_whitespace_only_raises_error(self):
         """Test that whitespace-only text raises ValueError."""
-        from src.translators.langdetect_detector import LangDetectDetector
+        from src.translators.language_detector import LangDetectDetector
 
         detector = LangDetectDetector()
 
@@ -79,7 +79,7 @@ class TestLangDetectDetector:
 
     def test_detect_very_short_text(self):
         """Test detection with very short text (single word)."""
-        from src.translators.langdetect_detector import LangDetectDetector
+        from src.translators.language_detector import LangDetectDetector
 
         detector = LangDetectDetector()
         # langdetect might be unreliable with very short text
@@ -92,7 +92,7 @@ class TestLangDetectDetector:
 
     def test_detect_longer_text(self):
         """Test detection with longer, more complex text."""
-        from src.translators.langdetect_detector import LangDetectDetector
+        from src.translators.language_detector import LangDetectDetector
 
         detector = LangDetectDetector()
         long_text = """
@@ -107,7 +107,7 @@ class TestLangDetectDetector:
 
     def test_detect_text_with_numbers(self):
         """Test detection of text containing numbers."""
-        from src.translators.langdetect_detector import LangDetectDetector
+        from src.translators.language_detector import LangDetectDetector
 
         detector = LangDetectDetector()
         result = detector.detect("I have 5 apples and 3 oranges today.")
@@ -116,7 +116,7 @@ class TestLangDetectDetector:
 
     def test_detect_text_with_punctuation(self):
         """Test detection of text with lots of punctuation."""
-        from src.translators.langdetect_detector import LangDetectDetector
+        from src.translators.language_detector import LangDetectDetector
 
         detector = LangDetectDetector()
         result = detector.detect("Hello! How are you? I'm doing great!!!")
@@ -125,7 +125,7 @@ class TestLangDetectDetector:
 
     def test_detect_portuguese(self):
         """Test detection of Portuguese text."""
-        from src.translators.langdetect_detector import LangDetectDetector
+        from src.translators.language_detector import LangDetectDetector
 
         detector = LangDetectDetector()
         result = detector.detect("Olá, como você está?")
@@ -134,7 +134,7 @@ class TestLangDetectDetector:
 
     def test_detect_italian(self):
         """Test detection of Italian text."""
-        from src.translators.langdetect_detector import LangDetectDetector
+        from src.translators.language_detector import LangDetectDetector
 
         detector = LangDetectDetector()
         result = detector.detect("Ciao, come stai?")
@@ -143,7 +143,7 @@ class TestLangDetectDetector:
 
     def test_multiple_detections_are_consistent(self):
         """Test that detecting the same text multiple times gives same result."""
-        from src.translators.langdetect_detector import LangDetectDetector
+        from src.translators.language_detector import LangDetectDetector
 
         detector = LangDetectDetector()
         text = "This is a test sentence in English."
@@ -156,7 +156,7 @@ class TestLangDetectDetector:
 
     def test_detector_is_reusable(self):
         """Test that same detector instance can be used multiple times."""
-        from src.translators.langdetect_detector import LangDetectDetector
+        from src.translators.language_detector import LangDetectDetector
 
         detector = LangDetectDetector()
 

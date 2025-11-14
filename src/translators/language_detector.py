@@ -7,14 +7,13 @@ abstract base class using Google's langdetect library.
 """
 
 from langdetect import detect, LangDetectException, DetectorFactory
-from src.translators.base import LanguageDetector
 
 # Set seed for deterministic results
 # langdetect uses random sampling, so we fix the seed for consistency
 DetectorFactory.seed = 0
 
 
-class LangDetectDetector(LanguageDetector):
+class LangDetectDetector():
     """
     Language detector using the langdetect library.
 

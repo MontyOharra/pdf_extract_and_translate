@@ -55,11 +55,6 @@ class Translator(ABC):
         Returns:
             A human-readable name for this translator (e.g., "Google Translate",
             "DeepL", "Argos Translate")
-
-        Example:
-            >>> translator = SomeTranslator()
-            >>> translator.name
-            'Google Translate'
         """
         pass
 
@@ -79,13 +74,6 @@ class Translator(ABC):
         Raises:
             ValueError: If text is empty, None, or if language codes are invalid.
             NotImplementedError: If the language pair is not supported.
-
-        Example:
-            >>> translator = SomeTranslator()
-            >>> translator.translate("Hello", "en", "es")
-            'Hola'
-            >>> translator.translate("Good morning", "en", "fr")
-            'Bonjour'
         """
         pass
 
