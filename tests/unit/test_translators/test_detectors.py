@@ -19,7 +19,7 @@ class TestLangDetectDetector:
         from src.translators.langdetect_detector import LangDetectDetector
 
         detector = LangDetectDetector()
-        result = detector.detect("Hello, how are you today?")
+        result = detector.detect("Good morning, how are you doing today? I hope you are having a wonderful day.")
 
         assert result == "en"
 
