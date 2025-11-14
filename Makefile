@@ -92,24 +92,24 @@ install-dev:
 # Run all tests with verbose output
 test:
 	@echo "Running tests..."
-	@$(CONDA_PYTEST) -v
+	@PATH="$(CONDA_ENV)/Library/bin:$$PATH" TESSDATA_PREFIX="$(CONDA_ENV)/share/tessdata" $(CONDA_PYTEST) -v
 
 # Run tests with coverage report
 test-cov:
 	@echo "Running tests with coverage..."
-	@$(CONDA_PYTEST) -v --cov=src --cov-report=term-missing --cov-report=html
+	@PATH="$(CONDA_ENV)/Library/bin:$$PATH" TESSDATA_PREFIX="$(CONDA_ENV)/share/tessdata" $(CONDA_PYTEST) -v --cov=src --cov-report=term-missing --cov-report=html
 	@echo ""
 	@echo "Coverage report generated in htmlcov/index.html"
 
 # Run tests in watch mode (requires pytest-watch)
 test-watch:
 	@echo "Running tests in watch mode (Ctrl+C to stop)..."
-	@$(CONDA_ENV_BIN)/ptw -- -v
+	@PATH="$(CONDA_ENV)/Library/bin:$$PATH" TESSDATA_PREFIX="$(CONDA_ENV)/share/tessdata" $(CONDA_ENV_BIN)/ptw -- -v
 
 # Run tests, stop at first failure (useful for TDD)
 test-fast:
 	@echo "Running tests (stop at first failure)..."
-	@$(CONDA_PYTEST) -x -v
+	@PATH="$(CONDA_ENV)/Library/bin:$$PATH" TESSDATA_PREFIX="$(CONDA_ENV)/share/tessdata" $(CONDA_PYTEST) -x -v
 
 # Run the application
 run:
