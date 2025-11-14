@@ -2,7 +2,7 @@
 
 ## Overview
 
-An interactive CLI system for extracting text from PDF and image files, with support for both typed and handwritten text, followed by automatic language detection and translation. Built with a plugin architecture demonstrating software engineering best practices.
+An interactive CLI system for extracting text from PDF and image files, with support for both typed and handwritten text, followed by automatic language detection and translation. Built with a plugin architecture for ability to switch between translation and extraction provides
 
 ## Goals
 

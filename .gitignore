@@ -9,6 +9,10 @@ ENV/
 .venv
 conda_env/
 
+# Environment variables with secrets
+.env
+.env.local
+
 .pytest_cache/
 .coverage
 htmlcov/

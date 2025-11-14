@@ -6,7 +6,7 @@
 # Conda environment settings
 CONDA_ENV := conda_env
 CONDA_ENV_BIN := $(CONDA_ENV)/Scripts
-CONDA_PYTHON := $(CONDA_ENV_BIN)/python.exe
+CONDA_PYTHON := $(CONDA_ENV)/python.exe
 CONDA_PYTEST := $(CONDA_ENV_BIN)/pytest.exe
 CONDA_PIP := $(CONDA_ENV_BIN)/pip.exe
 
@@ -114,7 +114,7 @@ test-fast:
 # Run the application
 run:
 	@echo "Starting PDF Extract and Translate..."
-	@$(CONDA_PYTHON) main.py
+	@PATH="$(CONDA_ENV)/Library/bin:$$PATH" TESSDATA_PREFIX="$(CONDA_ENV)/share/tessdata" $(CONDA_PYTHON) main.py
 
 # Clean up everything
 clean:

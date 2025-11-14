@@ -1,31 +1,9 @@
-# -*- coding: utf-8 -*-
-"""
-Wrapper for the deep-translator library.
-
-This module provides a unified interface to translation backends
-provided by the deep-translator library, focusing on Google Translate.
-"""
-
 from typing import Optional
 from deep_translator import GoogleTranslator
-
 
 class DeepTranslatorWrapper:
     """
     Wrapper for deep-translator library using Google Translate.
-
-    This class provides a consistent interface to translation services
-    available through the deep-translator library. Currently supports
-    Google Translate backend.
-
-    Attributes:
-        backend (str): The name of the translation backend being used.
-
-    Example:
-        >>> translator = DeepTranslatorWrapper(backend='google')
-        >>> result = translator.translate("Hello", "en", "es")
-        >>> print(result)
-        'Hola'
     """
 
     # Mapping of backend names to their corresponding deep-translator classes
@@ -50,12 +28,6 @@ class DeepTranslatorWrapper:
             backend: Which translation backend to use. Currently only 'google' is supported.
                     Defaults to 'google'.
             api_key: Optional API key for services that require it (future use).
-
-        Raises:
-            ValueError: If the specified backend is not supported.
-
-        Example:
-            >>> translator = DeepTranslatorWrapper(backend='google')
         """
         if not backend or backend not in self.BACKENDS:
             raise ValueError(
@@ -74,11 +46,6 @@ class DeepTranslatorWrapper:
 
         Returns:
             A human-readable name reflecting the backend being used.
-
-        Example:
-            >>> translator = DeepTranslatorWrapper(backend='google')
-            >>> translator.name
-            'Google Translator'
         """
         return f"{self.backend.title()} Translator"
 
@@ -88,23 +55,12 @@ class DeepTranslatorWrapper:
 
         Args:
             text: The text to translate. Must not be empty or None.
-            source_lang: Source language code (ISO 639-1, e.g., 'en', 'es').
+            source_lang: Source language code ISO 639-1
                         Use 'auto' to auto-detect the source language.
-            target_lang: Target language code (ISO 639-1, e.g., 'en', 'es').
+            target_lang: Target language code ISO 639-1
 
         Returns:
             The translated text in the target language.
-
-        Raises:
-            ValueError: If text is empty, None, or if language codes are invalid.
-            Exception: If the translation service returns an error.
-
-        Example:
-            >>> translator = DeepTranslatorWrapper(backend='google')
-            >>> translator.translate("Hello", "en", "es")
-            'Hola'
-            >>> translator.translate("Bonjour", "auto", "en")
-            'Hello'
         """
         # Validate text input
         if text is None:
@@ -132,7 +88,6 @@ class DeepTranslatorWrapper:
                 target=target_lang
             )
 
-            # Perform the translation
             result = translator_instance.translate(stripped_text)
 
             return result
@@ -145,7 +100,6 @@ class DeepTranslatorWrapper:
                     f"Invalid language code. Source: {source_lang}, Target: {target_lang}. "
                     f"Error: {str(e)}"
                 ) from e
-            # Otherwise re-raise the original exception
             raise
 
     def supports_language(self, lang_code: str) -> bool:
@@ -153,17 +107,10 @@ class DeepTranslatorWrapper:
         Check if this translator supports the given language.
 
         Args:
-            lang_code: ISO 639-1 language code (e.g., 'en', 'es', 'fr').
+            lang_code: ISO 639-1 language code
 
         Returns:
             True if the language is supported, False otherwise.
-
-        Example:
-            >>> translator = DeepTranslatorWrapper(backend='google')
-            >>> translator.supports_language('en')
-            True
-            >>> translator.supports_language('invalid_code')
-            False
         """
         if not lang_code or not isinstance(lang_code, str):
             return False

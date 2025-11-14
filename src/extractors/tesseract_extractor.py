@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Tesseract OCR-based text extraction implementation.
-
-This module provides text extraction from PDFs and images using Tesseract OCR.
-It handles both digital PDFs (by converting to images) and direct image files.
-"""
-
 from pathlib import Path
 from typing import Union
 import pytesseract
@@ -17,25 +9,9 @@ from src.extractors.base import TextExtractor
 class TesseractExtractor(TextExtractor):
     """
     Text extractor using Tesseract OCR.
-
-    This implementation uses Tesseract OCR to extract text from PDFs and images.
-    For PDFs, it first converts each page to an image, then applies OCR.
-    For images, it applies OCR directly.
-
-    Supports:
-        - PDF files (.pdf)
-        - PNG images (.png)
-        - JPEG images (.jpg, .jpeg)
-
-    Example:
-        >>> extractor = TesseractExtractor()
-        >>> text = extractor.extract_text("document.pdf")
-        >>> print(text)
-        'Extracted text from document...'
     """
 
     # Supported file formats
-    SUPPORTED_FORMATS = {'pdf', 'png', 'jpg', 'jpeg'}
 
     def __init__(self, dpi: int = 300, lang: str = 'eng'):
         """
@@ -43,47 +19,17 @@ class TesseractExtractor(TextExtractor):
 
         Args:
             dpi: DPI (dots per inch) for PDF to image conversion.
-                 Higher DPI = better quality but slower. Default: 300.
-                 Recommended: 300-500 for good quality.
             lang: Language(s) for OCR. Default: 'eng' (English).
-                 For multiple languages, use '+' separator: 'eng+spa+jpn'
-
-        Example:
-            >>> extractor = TesseractExtractor(dpi=500, lang='eng+spa')
         """
+        self.SUPPORTED_FORMATS = {'pdf', 'png', 'jpg', 'jpeg'}
         self.dpi = dpi
         self.lang = lang
 
     @property
     def name(self) -> str:
-        """
-        Return the name of this extractor.
-
-        Returns:
-            The name "Tesseract OCR"
-        """
         return "Tesseract OCR"
 
     def supports_format(self, file_format: str) -> bool:
-        """
-        Check if this extractor supports the given file format.
-
-        Args:
-            file_format: File format/extension (e.g., 'pdf', 'png', 'jpg')
-                        Case-insensitive.
-
-        Returns:
-            True if format is supported (pdf, png, jpg, jpeg), False otherwise.
-
-        Example:
-            >>> extractor = TesseractExtractor()
-            >>> extractor.supports_format('pdf')
-            True
-            >>> extractor.supports_format('PNG')
-            True
-            >>> extractor.supports_format('docx')
-            False
-        """
         if not file_format or not isinstance(file_format, str):
             return False
 
@@ -104,16 +50,6 @@ class TesseractExtractor(TextExtractor):
         Returns:
             The extracted text as a string. Multiple pages/images are
             concatenated with newlines.
-
-        Raises:
-            FileNotFoundError: If the input file doesn't exist.
-            ValueError: If the file format is not supported.
-            Exception: For OCR processing errors.
-
-        Example:
-            >>> extractor = TesseractExtractor()
-            >>> text = extractor.extract_text("document.pdf")
-            >>> text = extractor.extract_text("image.png")
         """
         # Convert to Path object
         file_path = Path(input_data) if isinstance(input_data, str) else input_data
@@ -203,7 +139,6 @@ class TesseractExtractor(TextExtractor):
         Returns:
             Extracted text from the image.
         """
-        # Use pytesseract to extract text
         # Configure Tesseract with language setting
         custom_config = f'-l {self.lang}'
 

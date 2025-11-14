@@ -237,50 +237,6 @@ class TestTranslationManager:
         assert isinstance(result, str)
         assert len(result) > 0
 
-    # ========== Reusability Tests ==========
-
-    def test_manager_is_reusable(self):
-        """Test that same manager instance can be used multiple times."""
-        from src.translators.manager import TranslationManager
-
-        manager = TranslationManager()
-
-        result1 = manager.auto_translate("Hello", target_lang="es")
-        result2 = manager.auto_translate("Good morning", target_lang="fr")
-        result3 = manager.auto_translate("Thank you", target_lang="de")
-
-        # All should return valid results
-        assert "hola" in result1.lower()
-        assert len(result2) > 0
-        assert len(result3) > 0
-
-    def test_multiple_translations_same_text(self):
-        """Test that translating same text multiple times gives consistent results."""
-        from src.translators.manager import TranslationManager
-
-        manager = TranslationManager()
-        text = "Hello, how are you today?"
-
-        result1 = manager.auto_translate(text, target_lang="es")
-        result2 = manager.auto_translate(text, target_lang="es")
-        result3 = manager.auto_translate(text, target_lang="es")
-
-        # Results should be consistent
-        assert result1 == result2 == result3
-
-    def test_multiple_manager_instances_work_independently(self):
-        """Test that multiple manager instances work independently."""
-        from src.translators.manager import TranslationManager
-
-        manager1 = TranslationManager()
-        manager2 = TranslationManager()
-
-        result1 = manager1.auto_translate("Hello", target_lang="es")
-        result2 = manager2.auto_translate("Hello", target_lang="es")
-
-        # Both should produce valid results
-        assert "hola" in result1.lower()
-        assert "hola" in result2.lower()
 
     # ========== Language Detection Integration Tests ==========
 

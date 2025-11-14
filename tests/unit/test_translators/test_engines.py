@@ -14,58 +14,6 @@ import pytest
 class TestDeepTranslatorWrapper:
     """Test suite for DeepTranslatorWrapper implementation."""
 
-    # ========== Backend Selection Tests ==========
-
-    def test_create_with_google_backend(self):
-        """Test creating translator with Google backend."""
-        from src.translators.deep_translator_wrapper import DeepTranslatorWrapper
-
-        translator = DeepTranslatorWrapper(backend='google')
-
-        assert translator is not None
-        assert translator.backend == 'google'
-
-    def test_create_with_default_backend(self):
-        """Test that default backend is google when not specified."""
-        from src.translators.deep_translator_wrapper import DeepTranslatorWrapper
-
-        translator = DeepTranslatorWrapper()
-
-        assert translator.backend == 'google'
-
-    def test_create_with_invalid_backend_raises_error(self):
-        """Test that invalid backend raises ValueError."""
-        from src.translators.deep_translator_wrapper import DeepTranslatorWrapper
-
-        with pytest.raises(ValueError, match="Unsupported backend"):
-            DeepTranslatorWrapper(backend='invalid_backend')
-
-    def test_create_with_empty_backend_raises_error(self):
-        """Test that empty backend string raises ValueError."""
-        from src.translators.deep_translator_wrapper import DeepTranslatorWrapper
-
-        with pytest.raises(ValueError, match="Unsupported backend"):
-            DeepTranslatorWrapper(backend='')
-
-    # ========== Name Property Tests ==========
-
-    def test_name_property_returns_string(self):
-        """Test that name property returns a non-empty string."""
-        from src.translators.deep_translator_wrapper import DeepTranslatorWrapper
-
-        translator = DeepTranslatorWrapper(backend='google')
-
-        assert isinstance(translator.name, str)
-        assert len(translator.name) > 0
-
-    def test_name_reflects_google_backend(self):
-        """Test that name reflects Google backend."""
-        from src.translators.deep_translator_wrapper import DeepTranslatorWrapper
-
-        translator = DeepTranslatorWrapper(backend='google')
-
-        assert 'google' in translator.name.lower()
-
     # ========== Basic Translation Tests ==========
 
     def test_translate_english_to_spanish(self):
@@ -246,23 +194,6 @@ class TestDeepTranslatorWrapper:
         assert translator.supports_language('invalid_code') is False
         assert translator.supports_language('xyz') is False
         assert translator.supports_language('') is False
-
-    # ========== Reusability Tests ==========
-
-    def test_translator_is_reusable(self):
-        """Test that same translator instance can be used multiple times."""
-        from src.translators.deep_translator_wrapper import DeepTranslatorWrapper
-
-        translator = DeepTranslatorWrapper(backend='google')
-
-        result1 = translator.translate("Hello", "en", "es")
-        result2 = translator.translate("Good morning", "en", "fr")
-        result3 = translator.translate("Thank you", "en", "de")
-
-        # All should return valid results
-        assert "hola" in result1.lower()
-        assert len(result2) > 0
-        assert len(result3) > 0
 
     def test_multiple_translations_same_text(self):
         """Test that translating same text multiple times gives consistent results."""

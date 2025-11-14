@@ -1,10 +1,3 @@
-"""
-Abstract base classes for translation system.
-
-This module defines the interfaces that all language detectors and translators
-must implement, enabling a plugin-based architecture.
-"""
-
 from abc import ABC, abstractmethod
 from typing import Optional
 
@@ -27,11 +20,7 @@ class LanguageDetector(ABC):
                   Should not be empty.
 
         Returns:
-            ISO 639-1 language code (e.g., 'en' for English, 'es' for Spanish,
-            'fr' for French, 'de' for German, etc.)
-
-        Raises:
-            ValueError: If text is empty, None, or invalid.
+            ISO 639-1 language code
         """
         pass
 
@@ -65,15 +54,11 @@ class Translator(ABC):
 
         Args:
             text: The text to translate. Should not be empty.
-            source_lang: Source language code (ISO 639-1, e.g., 'en', 'es').
-            target_lang: Target language code (ISO 639-1, e.g., 'en', 'es').
+            source_lang: Source language code
+            target_lang: Target language code
 
         Returns:
             The translated text in the target language.
-
-        Raises:
-            ValueError: If text is empty, None, or if language codes are invalid.
-            NotImplementedError: If the language pair is not supported.
         """
         pass
 
@@ -81,22 +66,11 @@ class Translator(ABC):
         """
         Check if this translator supports the given language.
 
-        This is a default implementation that returns True for all languages.
-        Subclasses should override this method with their specific logic to
-        check against their supported language list.
-
         Args:
-            lang_code: ISO 639-1 language code (e.g., 'en', 'es', 'fr')
+            lang_code: ISO 639-1 language code
 
         Returns:
             True if the language is supported, False otherwise.
             Default implementation returns True (assumes all languages supported).
-
-        Example:
-            >>> translator = SomeTranslator()
-            >>> translator.supports_language('en')
-            True
-            >>> translator.supports_language('invalid')
-            False  # If subclass implements proper validation
         """
         return True  # Default: assume all languages supported
