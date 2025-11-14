@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Helper utilities for loading test PDF fixtures.
-
-This module provides utilities to load test PDFs and their expected outputs
-for testing OCR extraction functionality.
-"""
-
 import os
 from pathlib import Path
 from typing import Tuple
@@ -37,12 +29,6 @@ class PDFFixtures:
 
         Raises:
             FileNotFoundError: If the file doesn't exist.
-
-        Example:
-            >>> path = PDFFixtures.get_file_path("simple_text.pdf")
-            >>> print(path)
-            Path('tests/fixtures/pdfs/typed/simple_text.pdf')
-            >>> path = PDFFixtures.get_file_path("image.png", "scanned")
         """
         if file_type == "typed":
             file_path = cls.TYPED_DIR / filename
@@ -72,9 +58,6 @@ class PDFFixtures:
         """
         Get the expected text output for a test file (PDF or image).
 
-        The expected output file should have the same base name as the input file
-        but with .txt extension.
-
         Args:
             filename: Name of the file (e.g., "simple_text.pdf", "image.png")
 
@@ -83,12 +66,6 @@ class PDFFixtures:
 
         Raises:
             FileNotFoundError: If the expected output file doesn't exist.
-
-        Example:
-            >>> expected = PDFFixtures.get_expected_output("simple_text.pdf")
-            >>> print(expected)
-            'Hello World'
-            >>> expected = PDFFixtures.get_expected_output("image.png")
         """
         # Get base filename without extension
         base_name = Path(filename).stem
@@ -117,12 +94,6 @@ class PDFFixtures:
 
         Returns:
             Tuple of (file path, expected text output)
-
-        Example:
-            >>> file_path, expected = PDFFixtures.get_file_and_expected("simple_text.pdf")
-            >>> # Use in tests
-            >>> extracted = extractor.extract_text(file_path)
-            >>> assert extracted == expected
         """
         file_path = cls.get_file_path(filename, file_type)
         expected = cls.get_expected_output(filename)
@@ -146,14 +117,6 @@ class PDFFixtures:
 
         Returns:
             List of filenames available for testing.
-
-        Example:
-            >>> files = PDFFixtures.list_available_files("typed")
-            >>> print(files)
-            ['simple_text.pdf', 'multi_line.pdf']
-            >>> files = PDFFixtures.list_available_files("scanned")
-            >>> print(files)
-            ['clean_scan.pdf', 'image.png']
         """
         if file_type == "typed":
             directory = cls.TYPED_DIR
@@ -169,21 +132,3 @@ class PDFFixtures:
         for ext in cls.SUPPORTED_EXTENSIONS:
             files.extend([f.name for f in directory.glob(f"*{ext}")])
         return sorted(files)
-
-    @classmethod
-    def list_available_pdfs(cls, pdf_type: str = "typed") -> list:
-        """
-        Legacy method name for backwards compatibility.
-        Use list_available_files instead.
-        """
-        if pdf_type == "typed":
-            directory = cls.TYPED_DIR
-        elif pdf_type == "scanned":
-            directory = cls.SCANNED_DIR
-        else:
-            raise ValueError(f"Invalid pdf_type: {pdf_type}. Must be 'typed' or 'scanned'.")
-
-        if not directory.exists():
-            return []
-
-        return [f.name for f in directory.glob("*.pdf")]

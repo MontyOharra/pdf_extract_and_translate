@@ -90,7 +90,7 @@ def run_cli():
             print(f"\nTranslating to {target_lang.upper()}...")
             try:
                 manager = TranslationManager()
-                translated_text = manager.auto_translate_multilingual(extracted_text, target_lang)
+                translated_text = manager.auto_translate(extracted_text, target_lang)
                 print(f"Translation complete")
             except Exception as e:
                 print(f"\nTranslation failed: {e}")
