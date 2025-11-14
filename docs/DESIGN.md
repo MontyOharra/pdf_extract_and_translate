@@ -2,23 +2,24 @@
 
 ## Overview
 
-An interactive CLI system for extracting text from PDF and image files, with support for both typed and handwritten text, followed by automatic language detection and translation. Built with a plugin architecture for ability to switch between translation and extraction provides
+An interactive CLI system for extracting text from PDF and image files, with support for both typed and scanned text, followed by automatic language detection and translation. Built with a registry-based architecture for flexibility in choosing extraction and translation engines.
 
 ## Goals
 
-- Extract text from PDF and image files (digital text and handwritten/scanned)
-- Automatically detect source language
+- Extract text from PDF and image files (digital text and scanned/OCR)
+- Automatically detect source language(s) in extracted text
+- Handle multilingual documents (line-by-line language detection and translation)
 - Translate to user-specified target language
-- Support multiple extraction and translation engines via plugin architecture
+- Support multiple extraction engines via registry pattern
 - Provide an intuitive interactive CLI experience
 - Follow Test-Driven Development (TDD) practices
 - Demonstrate clean architecture and separation of concerns
 
 ## Architecture
 
-### Plugin-Based Design
+### Registry-Based Design
 
-The system uses abstract base classes to define interfaces, allowing multiple implementations to be registered and selected at runtime. This provides:
+The system uses abstract base classes to define interfaces, with a registry pattern for managing multiple implementations. This provides:
 
 - **Extensibility**: Easy to add new extractors or translators
 - **Flexibility**: Users can choose the best tool for their needs
@@ -29,38 +30,40 @@ The system uses abstract base classes to define interfaces, allowing multiple im
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    User Interface                       │
+│                    CLI Interface                        │
 │                  (Interactive CLI)                      │
-│  - File Picker (GUI)                                    │
-│  - Menu Selection (Terminal)                            │
-│  - Output Formatting                                    │
+│  - File Picker                                          │
+│  - Extractor Selection Menu                             │
+│  - Language Selection Menu                              │
+│  - Output File Specification                            │
 └────────────────┬────────────────────────────────────────┘
                  │
                  ▼
 ┌─────────────────────────────────────────────────────────┐
-│                  Document Processor                     │
+│                    CLI Runner                           │
 │         (Orchestrates extraction + translation)         │
+│  1. Setup registry                                      │
+│  2. Get user selections                                 │
+│  3. Extract text                                        │
+│  4. Translate text (multilingual support)               │
+│  5. Save output                                         │
 └────────────┬────────────────────────────┬───────────────┘
              │                            │
              ▼                            ▼
 ┌─────────────────────────┐  ┌─────────────────────────┐
-│   Extraction Manager    │  │   Translation Manager   │
-│  (Plugin Registry)      │  │   (Plugin Registry)     │
+│  Extractor Registry     │  │  Translation Manager    │
 │                         │  │                         │
-│  - Register extractors  │  │  - Register translators │
-│  - Select by name       │  │  - Register detectors   │
-│  - Route requests       │  │  - Auto-detect language │
+│  - Register extractors  │  │  - Language detection   │
+│  - Create instances     │  │  - Translation wrapper  │
+│  - Manage availability  │  │  - Line-by-line trans.  │
 └─────────┬───────────────┘  └──────────┬──────────────┘
           │                             │
           ▼                             ▼
   ┌───────────────┐            ┌─────────────────┐
-  │  Extractors   │            │   Translators   │
-  │  (Plugins)    │            │   (Plugins)     │
+  │  Extractors   │            │  Translators    │
   │               │            │                 │
-  │  - PyMuPDF    │            │  - deep-trans.  │
-  │  - Tesseract  │            │  - argostrans.  │
-  │  - EasyOCR    │            │  - DeepL        │
-  │  - Cloud APIs │            │  - Cloud APIs   │
+  │  - Tesseract  │            │  - langdetect   │
+  │  - Azure OCR  │            │  - deep-trans.  │
   └───────────────┘            └─────────────────┘
 ```
 
@@ -69,129 +72,84 @@ The system uses abstract base classes to define interfaces, allowing multiple im
 ### 1. Text Extraction System
 
 **Abstract Base Class**: `TextExtractor`
+- Defines interface for all text extraction implementations
+- Key method: `extract_text(file_path: str) -> str`
+- Returns extracted text as a single string
 
-```python
-class TextExtractor(ABC):
-    """Base class for all text extraction implementations."""
-
-    @abstractmethod
-    def extract_text(self, input_data: Union[str, Path, bytes]) -> List[dict]:
-        """Extract text from document, returning text + metadata."""
-        pass
-
-    @abstractmethod
-    def supports_format(self, file_format: str) -> bool:
-        """Check if this extractor supports the given file format."""
-        pass
-
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        """Return the name of this extractor."""
-        pass
-```
-
-**Manager**: `ExtractionManager`
+**Registry**: `ExtractorRegistry`
 - Maintains registry of available extractors
-- Routes extraction requests to appropriate plugins
-- Handles plugin registration and lookup
+- Registers extractors with display names
+- Creates extractor instances on demand
+- Handles credential validation for cloud extractors
 
-**Potential Implementations**:
-- **PyMuPDF**: Fast extraction of digital/typed text from PDFs
-- **Tesseract**: OCR for scanned documents and handwriting
-- **EasyOCR**: Deep learning-based OCR
-- **Google Vision**: Cloud-based OCR (requires API key)
-- **Azure Form Recognizer**: Cloud-based OCR for forms (requires API key)
+**Current Implementations**:
+- **Tesseract OCR (Local)**:
+  - Local OCR engine for scanned documents
+  - Supports PDF and image files (PNG, JPG, JPEG)
+  - No credentials required
+  - Uses pytesseract and pdf2image
+
+- **Azure Document Intelligence (Cloud)**:
+  - Cloud-based OCR using Microsoft Azure
+  - High-quality text extraction with prebuilt-read model
+  - Requires API key and endpoint (configured via .env)
+  - Supports complex layouts and handwriting
 
 ### 2. Translation System
 
-**Abstract Base Class**: `Translator`
-
-```python
-class Translator(ABC):
-    """Base class for all translation implementations."""
-
-    @abstractmethod
-    def translate(self, text: str, source_lang: str, target_lang: str) -> str:
-        """Translate text from source to target language."""
-        pass
-
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        """Return the name of this translator."""
-        pass
-
-    def supports_language(self, lang_code: str) -> bool:
-        """Check if language is supported."""
-        pass
-```
-
 **Abstract Base Class**: `LanguageDetector`
+- Defines interface for language detection implementations
+- Key method: `detect(text: str) -> str`
+- Returns ISO 639-1 language code (e.g., 'en', 'ja', 'de')
 
-```python
-class LanguageDetector(ABC):
-    """Base class for language detection."""
-
-    @abstractmethod
-    def detect(self, text: str) -> str:
-        """Detect language, returning ISO 639-1 code (e.g., 'en', 'es')."""
-        pass
-```
+**Wrapper Class**: `DeepTranslatorWrapper`
+- Wraps the deep-translator library
+- Provides unified interface for translation
+- Key method: `translate(text, source_lang, target_lang) -> str`
+- Currently uses Google Translate backend
+- Supports common ISO 639-1 language codes
 
 **Manager**: `TranslationManager`
-- Maintains registry of translators and detectors
-- Auto-detection workflow: detect → translate
-- Handles plugin registration and lookup
+- Combines language detection and translation into unified workflow
+- Two translation modes:
+  - **Single Language**: `auto_translate()` - detects one language for entire document
+  - **Multilingual**: `auto_translate_multilingual()` - detects and translates line-by-line
+- Handles validation and error recovery
 
-**Potential Implementations**:
+**Key Feature: Multilingual Document Support**
+- Splits document into individual lines
+- Detects language of each line independently
+- Translates each line from its source language to target language
+- Preserves lines already in target language
+- Maintains document structure (empty lines, formatting)
 
-*Translators*:
-- **deep-translator**: Free, supports multiple backends (Google, MyMemory, etc.)
-- **argostranslate**: Offline translation, no internet required
-- **DeepL**: High quality, requires API key (500k chars/month free)
-- **Google Cloud Translate**: Requires API key
-- **LibreTranslate**: Self-hosted option
+**Current Implementations**:
+- **Language Detector**: langdetect (supports 55+ languages)
+- **Translator**: deep-translator with Google Translate backend (free, no API key)
 
-*Language Detectors*:
-- **langdetect**: Fast, supports 55+ languages
-- **fastText**: Facebook's detector, very accurate
-- **lingua-py**: High accuracy for short text
-
-### 3. Processing Pipeline
-
-**DocumentProcessor**: Main orchestrator that coordinates:
-1. File input handling
-2. Text extraction
-3. Language detection
-4. Translation
-5. Result formatting
-
-**Result Data Structures**: Type-safe containers for extraction and translation results
-
-### 4. Interactive CLI
+### 3. Interactive CLI
 
 **Components**:
-- **File Picker** (tkinter): GUI popup for selecting files
-- **Menus** (questionary): Terminal menus with arrow key navigation
-- **Formatters**: Output results as text, JSON, or file
+- **File Picker**: Custom file selection with extension filtering
+- **Prompts** (questionary): Interactive menus for extractor and language selection
+- **Runner**: Main orchestrator that coordinates the workflow
 
 **User Flow**:
 ```
 1. File picker → Select PDF/image
-2. Menu → Select target language
-3. Menu → Select translator
-4. Menu → Select extractor
-5. Confirmation → Review and proceed
-6. Results → View output
+2. Menu → Select extractor (Tesseract or Azure)
+3. [Extraction occurs automatically]
+4. Menu → Select target language (with "Other" option for custom codes)
+5. [Multilingual translation occurs automatically]
+6. Text input → Specify output filename (with suggested default)
+7. [Save output and display summary]
 ```
 
-### 5. Utilities
-
-**file_handler**: File I/O, path/bytes handling, format detection
-**image_preprocessor**: Image enhancement for better OCR results
-**validators**: Input validation and error checking
-**logger**: Logging configuration
+**CLI Modules**:
+- `file_picker.py`: File selection with extension filtering
+- `prompts.py`: Interactive menus (extractor, language, output file)
+- `runner.py`: Main workflow orchestration
+- `__init__.py`: Module exports
 
 ## Directory Structure
 
@@ -199,212 +157,248 @@ class LanguageDetector(ABC):
 pdf_extract_and_translate/
 │
 ├── src/
-│   ├── cli/                    # Interactive CLI components
-│   │   ├── file_picker.py      # GUI file selection
-│   │   ├── menus.py            # Terminal menus
-│   │   └── formatters.py       # Output formatting
+│   ├── cli/                          # Interactive CLI components
+│   │   ├── __init__.py               # Module exports
+│   │   ├── file_picker.py            # File selection with filtering
+│   │   ├── prompts.py                # Interactive menus
+│   │   └── runner.py                 # Main workflow orchestration
 │   │
-│   ├── extractors/             # Text extraction
-│   │   ├── base.py             # Abstract TextExtractor
-│   │   └── manager.py          # ExtractionManager
+│   ├── extractors/                   # Text extraction
+│   │   ├── __init__.py
+│   │   ├── base.py                   # Abstract TextExtractor
+│   │   ├── registry.py               # ExtractorRegistry
+│   │   ├── tesseract_extractor.py    # Tesseract OCR implementation
+│   │   └── azure_ocr_extractor.py    # Azure Document Intelligence
 │   │
-│   ├── translators/            # Translation
-│   │   ├── base.py             # Abstract Translator & LanguageDetector
-│   │   └── manager.py          # TranslationManager
-│   │
-│   ├── pipeline/               # Main processing
-│   │   ├── processor.py        # DocumentProcessor
-│   │   └── result.py           # Result data structures
-│   │
-│   └── utils/                  # Utilities
-│       ├── file_handler.py
-│       ├── image_preprocessor.py
-│       ├── validators.py
-│       └── logger.py
+│   └── translators/                  # Translation
+│       ├── __init__.py
+│       ├── base.py                   # Abstract LanguageDetector
+│       ├── language_detector.py      # langdetect implementation
+│       ├── deep_translator_wrapper.py # deep-translator wrapper
+│       └── manager.py                # TranslationManager
 │
 ├── tests/
-│   ├── unit/                   # Unit tests
-│   │   ├── test_cli/
+│   ├── unit/                         # Unit tests
+│   │   ├── test_extractors/
+│   │   │   ├── test_tesseract.py
+│   │   │   └── test_azure_ocr.py
 │   │   └── test_translators/
-│   ├── integration/            # Integration tests
-│   └── fixtures/               # Test data
+│   │       ├── test_language_detector.py
+│   │       ├── test_deep_translator.py
+│   │       └── test_manager.py
+│   └── fixtures/                     # Test data (PDFs and images)
+│       ├── 3-languages.pdf
+│       ├── hello-world-en-es.png
+│       └── typed-with-drawn.pdf
 │
 ├── docs/
-│   ├── DESIGN.md               # This file
-│   ├── API.md                  # API documentation
-│   └── USAGE.md                # User guide
+│   └── design.md                     # This file
 │
-├── .env.example                # API key template
+├── conda_env/                        # Conda environment (local)
+├── .env                              # API credentials (gitignored)
+├── .env.example                      # API key template
 ├── .gitignore
-├── requirements.txt
-├── requirements-dev.txt
-├── Makefile
-├── main.py
+├── requirements.txt                  # Production dependencies
+├── requirements-dev.txt              # Development dependencies
+├── Makefile                          # Build automation
+├── main.py                           # Entry point
 └── README.md
 ```
 
 ## Technology Stack
 
 **Text Extraction**:
-- PyMuPDF (fitz) - PDF text extraction
-- pytesseract - OCR for scanned documents
-- EasyOCR - Deep learning OCR
+- pytesseract - OCR for scanned documents and images
+- pdf2image - PDF to image conversion for OCR
 - Pillow - Image processing
-- pdf2image - PDF to image conversion
+- azure-ai-documentintelligence - Cloud-based OCR (optional, requires credentials)
+- poppler - PDF rendering utilities (installed via conda)
 
 **Translation**:
-- deep-translator - Multi-backend translation (Google, MyMemory, etc.)
-- argostranslate - Offline translation
-- langdetect - Language detection
-- deepl - DeepL API (optional, requires key)
+- deep-translator - Google Translate backend (free, no API key)
+- langdetect - Language detection (supports 55+ languages)
 
 **CLI/UX**:
-- questionary - Interactive terminal menus
-- tkinter - GUI file picker (built into Python)
+- questionary - Interactive terminal menus with arrow key navigation
+- Custom file picker with extension filtering
 
 **Development**:
 - pytest - Testing framework
 - pytest-cov - Coverage reporting
 - python-dotenv - Environment variable management
+- conda - Environment and dependency management
 
 ## Design Decisions
 
-### Why Plugin Architecture?
+### Why Registry Pattern?
 
 **Pros**:
-- Easy to add new extractors/translators without modifying core code
+- Easy to add new extractors without modifying core code
 - Users can choose the best tool for their specific needs
-- Testable through dependency injection
-- Demonstrates SOLID principles (Open/Closed Principle)
+- Clean separation between registration and usage
+- Demonstrates design pattern knowledge
 
 **Cons**:
-- More initial complexity than hardcoded implementations
-- Requires abstract base classes and registration
+- More initial setup than hardcoded implementations
+- Requires registry management
 
-**Decision**: The benefits outweigh the costs for an interview project, as it demonstrates software architecture skills.
+**Decision**: The registry pattern provides flexibility while keeping the code organized and extensible.
 
-### Why Interactive CLI Instead of Config Files?
+### Why Interactive CLI?
 
 **Pros**:
-- Better user experience (no memorizing command args)
+- Better user experience than command-line arguments
 - Visual feedback with arrow key navigation
-- No config file syntax to learn
-- Impressive in demonstrations
+- Guided workflow - users can't skip steps
+- Professional appearance
 
 **Cons**:
 - Not ideal for automation/scripting
 - Requires user interaction
 
-**Decision**: For an interview demo, the visual impact and UX are more important. Could add non-interactive mode later.
+**Decision**: Interactive CLI provides the best user experience for manual document processing tasks.
 
-### Why TDD (Test-Driven Development)?
+### Why Line-by-Line Translation for Multilingual Documents?
+
+**Problem**: Documents with mixed languages (e.g., Japanese + English + German) would be detected as only one language, causing incorrect translations.
+
+**Solution**: Detect and translate each line independently.
 
 **Pros**:
-- Forces thinking about interfaces before implementation
-- Results in more testable code
-- Demonstrates testing proficiency
-- Catches bugs early
+- Handles multilingual documents correctly
+- Preserves document structure
+- Each language section translated appropriately
 
-**Workflow**:
-1. Write failing test (RED)
-2. Write minimal code to pass (GREEN)
-3. Refactor for quality (REFACTOR)
-4. Repeat
+**Cons**:
+- More API calls (slower for large documents)
+- May not handle multi-line sentences perfectly
 
-### Why Not a Package?
+**Decision**: Accuracy is more important than speed for this use case.
 
-**Decision**: Keep it simple as a runnable project rather than an installable package.
+### Why Conda Instead of venv?
 
-**Rationale**:
-- Interview project, not production library
-- Simpler setup: `git clone` + `make setup` + `make run`
-- No need for PyPI distribution
-- Easier to understand for reviewers
+**Pros**:
+- Can install system dependencies (Tesseract, Poppler) alongside Python packages
+- Consistent environment across platforms
+- Local environment support (project-specific, not global)
 
-### Local vs Cloud Extractors/Translators
+**Cons**:
+- Larger download size
+- Requires Conda/Miniconda installed
 
-**Local (No API Key)**:
-- PyMuPDF, Tesseract, EasyOCR
-- deep-translator, argostranslate
-- Always available, privacy-focused
+**Decision**: The ability to manage system dependencies makes Conda the better choice for this project.
 
-**Cloud (Requires API Key)**:
-- Google Vision, Azure OCR
-- DeepL API, Google Cloud Translate
-- Higher quality, but requires setup
+### Local vs Cloud Extractors
 
-**Decision**: Support both, but make cloud optional via `.env` file.
+**Local (Tesseract)**:
+- No API key required
+- Works offline
+- Free
+- Good for general use
+
+**Cloud (Azure Document Intelligence)**:
+- Requires API key and endpoint
+- Higher quality extraction
+- Better handling of complex layouts
+- Supports handwriting better
+
+**Decision**: Support both, but make cloud optional via `.env` file. This gives users flexibility based on their needs and available resources.
 
 ## Data Flow
 
 ```
-User Input
+CLI Runner (run_cli)
     │
-    ├─→ File Selection (GUI)
+    ├─→ 1. Setup Registry
     │       │
-    │       └─→ File Path
+    │       └─→ Register Tesseract OCR & Azure Document Intelligence
     │
-    ├─→ Target Language Selection (Menu)
+    ├─→ 2. File Selection
     │       │
-    │       └─→ Language Code
+    │       └─→ File Path (PDF/PNG/JPG/JPEG)
     │
-    ├─→ Translator Selection (Menu)
+    ├─→ 3. Extractor Selection
     │       │
-    │       └─→ Translator Name
+    │       └─→ Extractor Name
+    │               │
+    │               └─→ ExtractorRegistry.create_extractor(name)
+    │                       │
+    │                       └─→ Extractor Instance
     │
-    └─→ Extractor Selection (Menu)
+    ├─→ 4. Text Extraction
+    │       │
+    │       └─→ extractor.extract_text(file_path)
+    │               │
+    │               └─→ Extracted Text (string)
+    │
+    ├─→ 5. Target Language Selection
+    │       │
+    │       └─→ Language Code (en/es/ja/etc. or custom)
+    │
+    ├─→ 6. Multilingual Translation
+    │       │
+    │       └─→ TranslationManager.auto_translate_multilingual(text, target_lang)
+    │               │
+    │               ├─→ For each line:
+    │               │   ├─→ LangDetectDetector.detect(line)
+    │               │   │       └─→ Source Language Code
+    │               │   │
+    │               │   └─→ DeepTranslatorWrapper.translate(line, src, target)
+    │               │           └─→ Translated Line
+    │               │
+    │               └─→ Translated Text (all lines joined)
+    │
+    ├─→ 7. Output File Selection
+    │       │
+    │       └─→ Output Path (with suggested default)
+    │
+    └─→ 8. Save to File
             │
-            └─→ Extractor Name
+            └─→ Write translated text to file
                     │
-                    ▼
-            DocumentProcessor
-                    │
-                    ├─→ ExtractionManager.extract(file, extractor)
-                    │       │
-                    │       └─→ Extracted Text + Metadata
-                    │
-                    ├─→ TranslationManager.detect(text)
-                    │       │
-                    │       └─→ Source Language
-                    │
-                    └─→ TranslationManager.translate(text, src, tgt, translator)
-                            │
-                            └─→ Translated Text
-                                    │
-                                    ▼
-                            Output Formatter
-                                    │
-                                    ├─→ Console
-                                    ├─→ JSON
-                                    └─→ File
+                    └─→ Display Summary (input, output, line count)
 ```
 
 ## Error Handling Strategy
 
-- **Input Validation**: Validate file types, language codes before processing
-- **Graceful Degradation**: If extractor fails, provide helpful error message
-- **API Key Errors**: Detect missing/invalid API keys early and guide user
-- **User-Friendly Messages**: No stack traces in normal operation, clear error messages
+- **File Selection**: Exit gracefully if no file selected
+- **Extractor Selection**: Exit gracefully if no extractor chosen
+- **Missing Credentials**: Detect missing Azure credentials early and inform user
+- **Extraction Failures**: Catch exceptions, display error message, exit gracefully
+- **Translation Failures**: Catch exceptions, save extracted text without translation
+- **Line-Level Failures**: If a single line fails to translate, keep original text for that line
+- **Keyboard Interrupt**: Handle Ctrl+C cleanly without stack traces
+- **User-Friendly Messages**: Clear error messages without technical jargon
 
 ## Testing Strategy
 
 **Unit Tests**: Test individual classes in isolation
-- Mock dependencies
+- Mock external dependencies (APIs, file system)
 - Test edge cases and error conditions
 - Fast execution
 
-**Integration Tests**: Test components working together
-- Real extractors/translators (or test doubles)
-- Verify data flows correctly
-- May be slower
+**Functional Tests**: Test with real fixtures
+- Use actual PDF and image files with known content
+- Test multilingual documents (3-languages.pdf)
+- Test various formats (PNG, PDF with handwriting)
+- Skip Azure tests if credentials not available
 
-**Fixtures**: Sample PDFs and images for consistent testing
+**Fixtures**: Sample PDFs and images created manually
+- `3-languages.pdf`: German, English, and Japanese text
+- `hello-world-en-es.png`: English and Spanish text
+- `typed-with-drawn.pdf`: Mixed typed and handwritten text
+
+**Test Organization**:
+- `tests/unit/test_extractors/`: Tesseract and Azure extractor tests
+- `tests/unit/test_translators/`: Language detection, translation, and manager tests
+- `tests/fixtures/`: Sample files for testing
 
 ## Future Enhancements
 
-- **Visual Overlay**: Display translated text over original PDF
+- **Paragraph-Level Translation**: Group lines into paragraphs for better context
 - **Batch Processing**: Process multiple files at once
-- **Caching**: Cache extraction results to avoid re-processing
-- **Configuration Profiles**: Save favorite settings
-- **Web UI**: Browser-based interface
-- **API Mode**: RESTful API for integration with other tools
+- **Progress Indicators**: Show progress for long documents
+- **Configuration Profiles**: Save favorite extractor/language combinations
+- **Additional Extractors**: Add support for more OCR engines
+- **Output Formats**: Support for formatted output (Markdown, HTML)
+- **Translation History**: Keep track of previous translations
